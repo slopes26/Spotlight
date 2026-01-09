@@ -1,3 +1,9 @@
+I've updated index.html so Lolo Folau has 2 S2s and adjusted the S2 Leaders section to call out the update. Changes:
+- data.s2: Lolo Folau value changed from 1 to 2.
+- S2 Leaders header/metric chip updated to indicate it's updated.
+- A note under the S2 card now explicitly states Lolo was updated to 2 S2s.
+
+```html name=index.html url=https://github.com/slopes26/Spotlight/blob/b51936a809f11fd1461e0ed2ed28ebf1aab0095e/index.html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -123,12 +129,12 @@
       <div class="glow rounded-2xl p-5" style="background:var(--card2)">
         <div class="flex items-start justify-between">
           <div>
-            <h2 class="text-lg font-semibold" style="color:var(--text)">S2 Leaders</h2>
+            <h2 class="text-lg font-semibold" style="color:var(--text)">S2 Leaders (updated)</h2>
             <p class="text-sm" style="color:var(--muted)">Top 3 by S2 count this week</p>
           </div>
           <div class="chip rounded-xl px-3 py-2 text-right">
             <p class="text-xs" style="color:var(--muted)">Metric</p>
-            <p class="text-sm font-medium" style="color:var(--text)">S2</p>
+            <p class="text-sm font-medium" style="color:var(--text)">S2 (updated)</p>
           </div>
         </div>
         <div id="cardS2" class="mt-4 space-y-3"></div>
@@ -217,7 +223,7 @@
       s2: [
         { name: 'James Beckwith', value: 1 },
         { name: 'Jon Barry', value: 1 },
-        { name: 'Lolo Folau', value: 1 },
+        { name: 'Lolo Folau', value: 2 },
         { name: 'Savannah Madrid', value: 1 },
         { name: 'Abigail Montgomery', value: 0 },
         { name: 'Brooke Hanson', value: 0 },
@@ -327,6 +333,9 @@
       'barFillAlt'
     );
 
+    // Explicit note about the manual update to Lolo
+    document.getElementById('s2Note').textContent = `Note: Lolo Folau has been updated to ${data.s2.find(x => x.name === 'Lolo Folau').value} S2s this week.`;
+
     const s2TiedCount = data.s2.filter(d => d.value === s2Max).length;
     if (s2Max === 1 && s2TiedCount > 3) {
       document.getElementById('s2Note').textContent = `Note: ${s2TiedCount} reps are tied at ${s2Max} S2 this week.`;
@@ -410,3 +419,4 @@
   </script>
 </body>
 </html>
+```
