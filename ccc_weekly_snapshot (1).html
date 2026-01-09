@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rippling Weekly SDR Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root{
+      --rp-medium:#7a005d;
+      --rp-deep:#4a0039;
+      --rp-lav:#eab8f2;
+      --bg:#0f0b14;
+      --card:#14101c;
+      --card2:#161223;
+      --text:#f4eef7;
+      --muted:#cbbdd4;
+      --line:rgba(234,184,242,.18);
+    }
+    .glow{
+      box-shadow: 0 0 0 1px var(--line), 0 18px 60px rgba(0,0,0,.45);
+    }
+    .grad{
+      background: radial-gradient(900px 420px at 25% -10%, rgba(234,184,242,.22), transparent 55%),
+                  radial-gradient(900px 420px at 85% 0%, rgba(122,0,93,.22), transparent 58%),
+                  radial-gradient(700px 460px at 30% 120%, rgba(74,0,57,.34), transparent 60%),
+                  linear-gradient(180deg, rgba(15,11,20,1), rgba(11,7,16,1));
+    }
+    .chip{
+      border: 1px solid rgba(234,184,242,.22);
+      background: rgba(234,184,242,.08);
+    }
+    .pill{
+      border: 1px solid rgba(234,184,242,.18);
+      background: rgba(74,0,57,.25);
+    }
+    .barTrack{
+      background: rgba(234,184,242,.10);
+      border: 1px solid rgba(234,184,242,.12);
+    }
+    .barFill{
+      background: linear-gradient(90deg, rgba(122,0,93,1), rgba(234,184,242,1));
+    }
+    .barFillAlt{
+      background: linear-gradient(90deg, rgba(74,0,57,1), rgba(122,0,93,1));
+    }
+    .tableRow:hover{ background: rgba(234,184,242,.06); }
+    .mono{ font-variant-numeric: tabular-nums; }
+  </style>
+</head>
+
+<body class="grad min-h-screen">
+  <div class="max-w-6xl mx-auto px-5 py-10">
+
+    <header class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+      <div class="space-y-2">
+        <div class="inline-flex items-center gap-2">
+          <div class="h-2.5 w-2.5 rounded-full" style="background:var(--rp-lav)"></div>
+          <p class="text-xs tracking-wide uppercase" style="color:var(--muted)">Weekly performance snapshot</p>
+        </div>
+        <h1 class="text-3xl md:text-4xl font-semibold" style="color:var(--text)">SDR Dashboard</h1>
+        <p class="text-sm" style="color:var(--muted)">Top 3 performers by widget. Use this as a quick readout for standups and coaching.</p>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <div class="chip rounded-xl px-3 py-2">
+          <p class="text-xs" style="color:var(--muted)">Timeframe</p>
+          <p class="text-sm font-medium" style="color:var(--text)">This week</p>
+        </div>
+        <div class="chip rounded-xl px-3 py-2">
+          <p class="text-xs" style="color:var(--muted)">Last refreshed</p>
+          <p id="refreshed" class="text-sm font-medium" style="color:var(--text)">Now</p>
+        </div>
+      </div>
+    </header>
+
+    <section class="mt-8 grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div class="glow rounded-2xl p-4" style="background:var(--card)">
+        <p class="text-xs" style="color:var(--muted)">Total S1</p>
+        <div class="flex items-end justify-between mt-2">
+          <p id="kpiS1" class="text-3xl font-semibold mono" style="color:var(--text)">0</p>
+          <span class="pill text-xs px-2 py-1 rounded-full" style="color:var(--text)">Weekly</span>
+        </div>
+      </div>
+      <div class="glow rounded-2xl p-4" style="background:var(--card)">
+        <p class="text-xs" style="color:var(--muted)">Total S2</p>
+        <div class="flex items-end justify-between mt-2">
+          <p id="kpiS2" class="text-3xl font-semibold mono" style="color:var(--text)">0</p>
+          <span class="pill text-xs px-2 py-1 rounded-full" style="color:var(--text)">Weekly</span>
+        </div>
+      </div>
+      <div class="glow rounded-2xl p-4" style="background:var(--card)">
+        <p class="text-xs" style="color:var(--muted)">Team connect rate</p>
+        <div class="flex items-end justify-between mt-2">
+          <p id="kpiCR" class="text-3xl font-semibold mono" style="color:var(--text)">0%</p>
+          <span class="pill text-xs px-2 py-1 rounded-full" style="color:var(--text)">Weighted</span>
+        </div>
+      </div>
+      <div class="glow rounded-2xl p-4" style="background:var(--card)">
+        <p class="text-xs" style="color:var(--muted)">Connect to demo rate</p>
+        <div class="flex items-end justify-between mt-2">
+          <p id="kpiC2D" class="text-3xl font-semibold mono" style="color:var(--text)">0%</p>
+          <span class="pill text-xs px-2 py-1 rounded-full" style="color:var(--text)">Per connect</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div class="glow rounded-2xl p-5" style="background:var(--card2)">
+        <div class="flex items-start justify-between">
+          <div>
+            <h2 class="text-lg font-semibold" style="color:var(--text)">S1 Leaders</h2>
+            <p class="text-sm" style="color:var(--muted)">Top 3 by S1 count this week</p>
+          </div>
+          <div class="chip rounded-xl px-3 py-2 text-right">
+            <p class="text-xs" style="color:var(--muted)">Metric</p>
+            <p class="text-sm font-medium" style="color:var(--text)">S1</p>
+          </div>
+        </div>
+        <div id="cardS1" class="mt-4 space-y-3"></div>
+      </div>
+
+      <div class="glow rounded-2xl p-5" style="background:var(--card2)">
+        <div class="flex items-start justify-between">
+          <div>
+            <h2 class="text-lg font-semibold" style="color:var(--text)">S2 Leaders</h2>
+            <p class="text-sm" style="color:var(--muted)">Top 3 by S2 count this week</p>
+          </div>
+          <div class="chip rounded-xl px-3 py-2 text-right">
+            <p class="text-xs" style="color:var(--muted)">Metric</p>
+            <p class="text-sm font-medium" style="color:var(--text)">S2</p>
+          </div>
+        </div>
+        <div id="cardS2" class="mt-4 space-y-3"></div>
+        <p id="s2Note" class="mt-4 text-xs" style="color:var(--muted)"></p>
+      </div>
+
+      <div class="glow rounded-2xl p-5" style="background:var(--card2)">
+        <div class="flex items-start justify-between">
+          <div>
+            <h2 class="text-lg font-semibold" style="color:var(--text)">Connect Rate Leaders</h2>
+            <p class="text-sm" style="color:var(--muted)">Top 3 by connect rate</p>
+          </div>
+          <div class="chip rounded-xl px-3 py-2 text-right">
+            <p class="text-xs" style="color:var(--muted)">Metric</p>
+            <p class="text-sm font-medium" style="color:var(--text)">Connect rate</p>
+          </div>
+        </div>
+        <div id="cardCR" class="mt-4 space-y-3"></div>
+        <p id="crNote" class="mt-4 text-xs" style="color:var(--muted)"></p>
+      </div>
+
+      <div class="glow rounded-2xl p-5" style="background:var(--card2)">
+        <div class="flex items-start justify-between">
+          <div>
+            <h2 class="text-lg font-semibold" style="color:var(--text)">Connect to Demo Leaders</h2>
+            <p class="text-sm" style="color:var(--muted)">Top 3 by connect to demo rate</p>
+          </div>
+          <div class="chip rounded-xl px-3 py-2 text-right">
+            <p class="text-xs" style="color:var(--muted)">Metric</p>
+            <p class="text-sm font-medium" style="color:var(--text)">Connect to demo</p>
+          </div>
+        </div>
+        <div id="cardC2D" class="mt-4 space-y-3"></div>
+      </div>
+    </section>
+
+    <section class="mt-6 glow rounded-2xl p-5" style="background:var(--card)">
+      <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
+        <div>
+          <h2 class="text-lg font-semibold" style="color:var(--text)">Full roster</h2>
+          <p class="text-sm" style="color:var(--muted)">All reps, with the 4 source widgets shown side by side</p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <span class="chip rounded-full px-3 py-1 text-xs" style="color:var(--text)">S1</span>
+          <span class="chip rounded-full px-3 py-1 text-xs" style="color:var(--text)">S2</span>
+          <span class="chip rounded-full px-3 py-1 text-xs" style="color:var(--text)">Connect rate</span>
+          <span class="chip rounded-full px-3 py-1 text-xs" style="color:var(--text)">Connect to demo</span>
+        </div>
+      </div>
+
+      <div class="mt-4 overflow-x-auto">
+        <table class="min-w-full text-sm">
+          <thead>
+            <tr style="color:var(--muted)">
+              <th class="text-left font-medium py-2 pr-4">Rep</th>
+              <th class="text-right font-medium py-2 px-3">S1</th>
+              <th class="text-right font-medium py-2 px-3">S2</th>
+              <th class="text-right font-medium py-2 px-3">Connects</th>
+              <th class="text-right font-medium py-2 px-3">Records</th>
+              <th class="text-right font-medium py-2 px-3">Connect rate</th>
+              <th class="text-right font-medium py-2 px-3">Connect to demo</th>
+            </tr>
+          </thead>
+          <tbody id="rosterBody" class="divide-y" style="border-color:var(--line)"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <footer class="mt-8 text-xs" style="color:var(--muted)">
+      <p>Data source: screenshots provided. If you change the numbers, update the arrays at the bottom of this file.</p>
+    </footer>
+
+  </div>
+
+  <script>
+    const data = {
+      s1: [
+        { name: 'Abigail Montgomery', value: 3 },
+        { name: 'Brooke Hanson', value: 1 },
+        { name: 'Jake Williams', value: 1 },
+        { name: 'James Beckwith', value: 8 },
+        { name: 'Jon Barry', value: 1 },
+        { name: 'Lolo Folau', value: 4 },
+        { name: 'Savannah Madrid', value: 2 },
+      ],
+      s2: [
+        { name: 'James Beckwith', value: 1 },
+        { name: 'Jon Barry', value: 1 },
+        { name: 'Lolo Folau', value: 1 },
+        { name: 'Savannah Madrid', value: 1 },
+        { name: 'Abigail Montgomery', value: 0 },
+        { name: 'Brooke Hanson', value: 0 },
+        { name: 'Jake Williams', value: 0 },
+      ],
+      connectRate: [
+        { name: 'Savannah Madrid', connects: 13, records: 424, rate: 3.1 },
+        { name: 'Abigail Montgomery', connects: 14, records: 421, rate: 3.3 },
+        { name: 'Lolo Folau', connects: 13, records: 415, rate: 3.1 },
+        { name: 'James Beckwith', connects: 20, records: 413, rate: 4.8 },
+        { name: 'Jon Barry', connects: 8, records: 335, rate: 2.4 },
+        { name: 'Brooke Hanson', connects: 6, records: 301, rate: 2.0 },
+        { name: 'Jake Williams', connects: 5, records: 203, rate: 2.5 },
+      ],
+      connectToDemo: [
+        { name: 'Jon Barry', demos: 0, connects: 8, rate: 0.00 },
+        { name: 'Abigail Montgomery', demos: 1, connects: 14, rate: 7.14 },
+        { name: 'Savannah Madrid', demos: 1, connects: 13, rate: 7.69 },
+        { name: 'James Beckwith', demos: 3, connects: 20, rate: 15.00 },
+        { name: 'Brooke Hanson', demos: 1, connects: 6, rate: 16.67 },
+        { name: 'Jake Williams', demos: 1, connects: 6, rate: 16.67 },
+        { name: 'Lolo Folau', demos: 3, connects: 13, rate: 23.08 },
+      ]
+    };
+
+    const fmtPct = (n, digits = 1) => `${Number(n).toFixed(digits)}%`;
+
+    const now = new Date();
+    document.getElementById('refreshed').textContent = now.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+
+    // KPIs
+    const totalS1 = data.s1.reduce((a, b) => a + b.value, 0);
+    const totalS2 = data.s2.reduce((a, b) => a + b.value, 0);
+    const totalConnects = data.connectRate.reduce((a, b) => a + b.connects, 0);
+    const totalRecords = data.connectRate.reduce((a, b) => a + b.records, 0);
+    const teamConnectRate = totalRecords ? (totalConnects / totalRecords) * 100 : 0;
+
+    const totalC2D = data.connectToDemo.reduce((a, b) => a + b.demos, 0);
+    const totalConnectsForC2D = data.connectToDemo.reduce((a, b) => a + b.connects, 0);
+    const teamC2D = totalConnectsForC2D ? (totalC2D / totalConnectsForC2D) * 100 : 0;
+
+    document.getElementById('kpiS1').textContent = totalS1;
+    document.getElementById('kpiS2').textContent = totalS2;
+    document.getElementById('kpiCR').textContent = fmtPct(teamConnectRate, 1);
+    document.getElementById('kpiC2D').textContent = fmtPct(teamC2D, 1);
+
+    // Helpers
+    function topN(items, n, valueKey = 'value') {
+      return [...items].sort((a, b) => (b[valueKey] ?? 0) - (a[valueKey] ?? 0)).slice(0, n);
+    }
+
+    function renderLeaders(containerId, leaders, maxValue, labelFn, valueFn, fillClass = 'barFill') {
+      const el = document.getElementById(containerId);
+      el.innerHTML = '';
+      leaders.forEach((d, idx) => {
+        const value = valueFn(d);
+        const pct = maxValue ? Math.max(6, Math.round((value / maxValue) * 100)) : 6;
+        const row = document.createElement('div');
+        row.className = 'rounded-xl p-3';
+        row.style.background = 'rgba(234,184,242,.04)';
+        row.style.border = '1px solid rgba(234,184,242,.10)';
+
+        row.innerHTML = `
+          <div class="flex items-center justify-between gap-3">
+            <div class="min-w-0">
+              <div class="flex items-center gap-2">
+                <span class="pill text-xs px-2 py-1 rounded-full mono" style="color:var(--text)">#${idx + 1}</span>
+                <p class="font-medium truncate" style="color:var(--text)">${d.name}</p>
+              </div>
+              <p class="text-xs mt-1" style="color:var(--muted)">${labelFn(d)}</p>
+            </div>
+            <div class="text-right">
+              <p class="text-xl font-semibold mono" style="color:var(--text)">${value}</p>
+            </div>
+          </div>
+          <div class="barTrack mt-3 h-2 rounded-full overflow-hidden">
+            <div class="${fillClass} h-full" style="width:${pct}%"></div>
+          </div>
+        `;
+
+        el.appendChild(row);
+      });
+    }
+
+    // S1
+    const s1Top = topN(data.s1, 3, 'value');
+    const s1Max = Math.max(...data.s1.map(d => d.value));
+    renderLeaders(
+      'cardS1',
+      s1Top,
+      s1Max,
+      () => 'S1 this week',
+      d => d.value,
+      'barFill'
+    );
+
+    // S2
+    const s2Sorted = [...data.s2].sort((a, b) => b.value - a.value);
+    const s2Top = s2Sorted.slice(0, 3);
+    const s2Max = Math.max(...data.s2.map(d => d.value));
+    renderLeaders(
+      'cardS2',
+      s2Top,
+      s2Max,
+      () => 'S2 this week',
+      d => d.value,
+      'barFillAlt'
+    );
+
+    const s2TiedCount = data.s2.filter(d => d.value === s2Max).length;
+    if (s2Max === 1 && s2TiedCount > 3) {
+      document.getElementById('s2Note').textContent = `Note: ${s2TiedCount} reps are tied at ${s2Max} S2 this week.`;
+    }
+
+    // Connect rate
+    const crSorted = [...data.connectRate].sort((a, b) => b.rate - a.rate);
+    const crTop = crSorted.slice(0, 3);
+    const crMax = Math.max(...data.connectRate.map(d => d.rate));
+    renderLeaders(
+      'cardCR',
+      crTop.map(d => ({ name: d.name, value: d.rate, connects: d.connects, records: d.records })),
+      crMax,
+      d => `${d.connects} connects on ${d.records} records`,
+      d => fmtPct(d.value, 1),
+      'barFill'
+    );
+
+    const third = crTop[2];
+    const tiesAtThird = data.connectRate.filter(d => d.rate === third.rate).map(d => d.name);
+    if (tiesAtThird.length > 1) {
+      const otherNames = tiesAtThird.filter(n => !crTop.slice(0, 3).map(x => x.name).includes(n));
+      if (otherNames.length) {
+        document.getElementById('crNote').textContent = `Note: tie at ${fmtPct(third.rate, 1)} with ${otherNames.join(', ')}.`;
+      }
+    }
+
+    // Connect to demo
+    const c2dSorted = [...data.connectToDemo].sort((a, b) => b.rate - a.rate);
+    const c2dTop = c2dSorted.slice(0, 3);
+    const c2dMax = Math.max(...data.connectToDemo.map(d => d.rate));
+    renderLeaders(
+      'cardC2D',
+      c2dTop.map(d => ({ name: d.name, value: d.rate, demos: d.demos, connects: d.connects })),
+      c2dMax,
+      d => `${d.demos} demos on ${d.connects} connects`,
+      d => fmtPct(d.value, 2),
+      'barFillAlt'
+    );
+
+    // Full roster table (merge)
+    const byName = new Map();
+    const ensure = (name) => {
+      if (!byName.has(name)) byName.set(name, { name, s1: 0, s2: 0, connects: 0, records: 0, connectRate: 0, demos: 0, connectsForC2D: 0, c2dRate: 0 });
+      return byName.get(name);
+    };
+
+    data.s1.forEach(d => ensure(d.name).s1 = d.value);
+    data.s2.forEach(d => ensure(d.name).s2 = d.value);
+    data.connectRate.forEach(d => {
+      const r = ensure(d.name);
+      r.connects = d.connects;
+      r.records = d.records;
+      r.connectRate = d.rate;
+    });
+    data.connectToDemo.forEach(d => {
+      const r = ensure(d.name);
+      r.demos = d.demos;
+      r.connectsForC2D = d.connects;
+      r.c2dRate = d.rate;
+    });
+
+    const roster = [...byName.values()].sort((a, b) => (b.s1 - a.s1) || (b.connectRate - a.connectRate) || a.name.localeCompare(b.name));
+    const body = document.getElementById('rosterBody');
+
+    roster.forEach(r => {
+      const tr = document.createElement('tr');
+      tr.className = 'tableRow';
+      tr.style.borderColor = 'var(--line)';
+      tr.innerHTML = `
+        <td class="py-3 pr-4" style="color:var(--text)">${r.name}</td>
+        <td class="py-3 px-3 text-right mono" style="color:var(--text)">${r.s1}</td>
+        <td class="py-3 px-3 text-right mono" style="color:var(--text)">${r.s2}</td>
+        <td class="py-3 px-3 text-right mono" style="color:var(--text)">${r.connects}</td>
+        <td class="py-3 px-3 text-right mono" style="color:var(--text)">${r.records}</td>
+        <td class="py-3 px-3 text-right mono" style="color:var(--text)">${fmtPct(r.connectRate, 1)}</td>
+        <td class="py-3 px-3 text-right mono" style="color:var(--text)">${fmtPct(r.c2dRate, 2)}</td>
+      `;
+      body.appendChild(tr);
+    });
+  </script>
+</body>
+</html>
